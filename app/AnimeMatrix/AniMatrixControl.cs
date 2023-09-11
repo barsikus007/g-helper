@@ -101,6 +101,9 @@ namespace GHelper.AnimeMatrix
                     case 4:
                         SetMatrixAudio();
                         break;
+                    case 5:
+                        SetMatrixText(AppConfig.GetString("matrix_text", ""));
+                        break;
                     default:
                         device.SetBuiltInAnimation(true, animation);
                         Logger.WriteLine("Matrix builtin " + animation.AsByte);
@@ -146,6 +149,13 @@ namespace GHelper.AnimeMatrix
             device.SetBuiltInAnimation(false);
             StartMatrixTimer(1000);
             Logger.WriteLine("Matrix Clock");
+        }
+
+        public void SetMatrixText(string text)
+        {
+            device.SetBuiltInAnimation(false);
+            device.PresentTextZ(text);
+            Logger.WriteLine("Matrix Text: " + text);
         }
 
         public void Dispose()

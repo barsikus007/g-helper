@@ -1017,6 +1017,15 @@ namespace GHelper.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Clock.
+        /// </summary>
+        internal static string MatrixText {
+            get {
+                return ResourceManager.GetString("MatrixText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dim.
         /// </summary>
         internal static string MatrixDim {

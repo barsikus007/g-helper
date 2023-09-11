@@ -517,6 +517,14 @@ namespace GHelper
             matrixControl.SetMatrix();
         }
 
+        private void TextMatrix_Enter(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter) {
+                AppConfig.Set("matrix_text", textMatrix.Text);
+                matrixControl.SetMatrix();
+            }
+        }
+
 
 
         private void ButtonMatrix_Click(object? sender, EventArgs e)
@@ -717,6 +725,9 @@ namespace GHelper
 
             checkMatrix.Checked = AppConfig.Is("matrix_auto");
             checkMatrix.CheckedChanged += CheckMatrix_CheckedChanged;
+
+            textMatrix.Text = AppConfig.GetString("matrix_text", "");
+            textMatrix.KeyDown += TextMatrix_Enter;
 
         }
 

@@ -87,6 +87,11 @@ namespace Starlight.AnimeMatrix
         List<byte[]> frames = new List<byte[]>();
 
         public int MaxRows = 61;
+        //public int FullRows = 11;
+        //public int FullEvenRows = -1;
+
+        public int dx = 0;
+        public int MaxDiagonalRows = 36;
         public int MaxColumns = 34;
         public int LedStart = 0;
 
@@ -109,7 +114,10 @@ namespace Starlight.AnimeMatrix
                 _model = AnimeType.GA401;
 
                 MaxColumns = 33;
+                dx = 1;
+
                 MaxRows = 55;
+                MaxDiagonalRows = 36;
                 LedCount = 1245;
 
                 UpdatePageLength = 410;
@@ -434,6 +442,7 @@ namespace Starlight.AnimeMatrix
                         if (color > 100) SetLedDiagonal(x, y, (byte)color, deltaX, deltaY);
                     }
                 }
+                bmp.Save(@"D:\projects\g-helper\app\bin\test-diag.bmp");
             }
         }
 
@@ -456,6 +465,7 @@ namespace Starlight.AnimeMatrix
 
                     if (text2.Length > 0)
                         using (Font font = new Font("Consolas", 18F, GraphicsUnit.Pixel))
+                        // using (Font font = new Font("ROG Fonts v1.5", 18F, GraphicsUnit.Pixel))
                         {
                             SizeF textSize = g.MeasureString(text2, font);
                             g.DrawString(text2, font, Brushes.White, (MaxColumns * 3 - textSize.Width) + 1, 25);
@@ -467,6 +477,7 @@ namespace Starlight.AnimeMatrix
 
                 GenerateFrame(bmp);
                 Present();
+                bmp.Save(@"D:\projects\g-helper\app\bin\test.bmp");
             }
 
         }
@@ -501,12 +512,13 @@ namespace Starlight.AnimeMatrix
                 for (int y = 0; y < bmp.Height; y++)
                 {
                     for (int x = 0; x < bmp.Width; x++)
-                        if (x % 2 == y % 2)
+                        // if (x % 2 == y % 2)
                         {
                             var pixel = bmp.GetPixel(x, y);
                             var color = (pixel.R + pixel.G + pixel.B) / 3;
                             if (color < 10) color = 0;
-                            SetLedPlanar(x / 2, y, (byte)color);
+                            // SetLedPlanar(x / 2, y, (byte)color);
+                            SetLedDiagonalGA401(x, y, (byte)color);
                         }
                 }
             }
@@ -524,6 +536,12 @@ namespace Starlight.AnimeMatrix
         }
 
 
+        public void SetLedDiagonalGA401(int x, int y, byte color)
+        {
+            SetLedDiagonal(x, y, color, 0, 34);
+        }
+
+
         private bool IsRowInRange(int row)
         {
             return (row >= 0 && row < MaxRows);
@@ -532,6 +550,199 @@ namespace Starlight.AnimeMatrix
         private bool IsAddressableLed(int address)
         {
             return (address >= 0 && address < LedCount);
+        }
+        
+        public void PresentTextDiagonal(string text)
+        {
+
+            Clear();
+
+
+            InstalledFontCollection installedFontCollection = new InstalledFontCollection();
+
+
+            string familyName;
+            string familyList = "";
+            FontFamily[] fontFamilies;
+            // Get the array of FontFamily objects.
+            fontFamilies = installedFontCollection.Families;
+
+            int count = fontFamilies.Length;
+            for (int j = 0; j < count; ++j)
+            {
+                familyName = fontFamilies[j].Name;
+                familyList = familyList + familyName;
+                familyList = familyList + ",  ";
+            }
+
+            int maxX = (int)Math.Sqrt(MaxRows * MaxRows + MaxColumns * MaxColumns);
+
+            using (Bitmap bmp = new Bitmap(maxX, MaxRows))
+            {
+                using (Graphics g = Graphics.FromImage(bmp))
+                {
+                    g.CompositingQuality = CompositingQuality.HighQuality;
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                    using (Font font = new Font("Consolas", 13F, FontStyle.Regular, GraphicsUnit.Pixel))
+                    {
+                        SizeF textSize = g.MeasureString(text, font);
+                        g.DrawString(text, font, Brushes.White, 4, 1);
+                    }
+                }
+
+                for (int y = 0; y < bmp.Height; y++)
+                {
+                    for (int x = 0; x < bmp.Width; x++)
+                    {
+                        var pixel = bmp.GetPixel(x, y);
+                        var color = (pixel.R + pixel.G + pixel.B) / 3;
+                        SetLedDiagonal(x, y, (byte)color);
+                    }
+                }
+            }
+
+            Present();
+        }
+
+        static (int, int) GetRowData(int row)
+        {
+            /*
+                short - long - ...
+                1   - 33
+                34  - 66   67-68 do nothing
+                69  - 101
+                102 - 134  135-136 do nothing
+                137 - 169
+                170 - 202  203 do nothing
+                204 - 236
+                237 - 268  269 do nothing -1 starts
+                270 - 301
+                302 - 332  333 do nothing -1
+                334 - 364
+                ...
+             */
+
+            int row_leds = 33; // -1 every 2 rows starting from 8
+            int row_modifier_ = row > 7 ? (row - 6) / 2 : 0;
+            int row_modifier = (int)Math.Pow(row_modifier_, 2) + row_modifier_ * (row % 2);
+            int last = row * row_leds + (row > 2 ? (row > 4) ? 4 : 2 : 0) + (row > 6 ? (row - 5) / 2 : 0) - row_modifier;
+            int first = last - row_leds + 1 + row_modifier_;
+            // Logger.WriteLine($"{row}: {first}-{last} {row_modifier_} {row_modifier}");
+            return (first, last);
+        }
+
+        public void PresentBorder()
+        {
+            Clear();
+            for (int row = 1; row <= 55; row++)
+            {
+                (int first, int last) = GetRowData(row);
+                SetLedLinear(first, 255);
+                SetLedLinear(last, 255);
+                if (row == 1 || row == 55) for (int i = first + 1; i < last; i++) SetLedLinear(i, 255);
+            }
+            Present();
+        }
+
+        public void SetLedDiagonalZ(int x = 1, int y = 1, byte color = 255)
+        {
+            int row = x+3;
+            (int first, int last) = GetRowData(row);
+            int set_value = first + (row - y);
+            if (row < 6) set_value--;
+            if (row < 4) set_value--;
+            if (row < 2) set_value--;
+            if (y == row && y == 4) return;
+            if (set_value > last) return;
+            SetLedLinear(set_value, color);
+        }
+
+        public void PresentTextZ(string text)
+        {
+            // int second = DateTime.Now.Second;
+            // string time;
+            Clear();
+            int kek = int.Parse(text);
+            // for (int z = 1; z <= kek; z++)
+            // {
+            //     // Logger.WriteLine($"{z} 1 - {kek}");
+
+            //     // SetLedLinear(z, (byte)(z % 256));
+            //     SetLedLinear(z, 255);
+            // }
+            /*
+                short - long - ...
+                1   - 33
+                34  - 66   67-68 do nothing
+                69  - 101
+                102 - 134  135-136 do nothing
+                137 - 169
+                170 - 202  203 do nothing
+                204 - 236
+                237 - 268  269 do nothing -1 starts
+                270 - 301
+                302 - 332  333 do nothing -1
+                334 - 364
+                ...
+             */
+            if (kek == 0)
+            {
+                for (int lol = 1; lol <= LedCount; lol++)
+                {
+                    SetLedLinear(lol, 255);
+                }
+                Present();
+                return;
+            }
+            if (kek == -1)
+            {
+                for (int ledX = 1; ledX <= 60; ledX++) for (int ledY = 1; ledY <= 36; ledY++) SetLedDiagonalGA401(ledX, ledY, 255);
+                Present();
+                return;
+            }
+            // PresentBorder();
+            kek += 3;
+            // SetLedDiagonal(1, 33, 255, 0, 34);
+            // SetLedDiagonal(1, 34, 255, 0, 34);
+            // SetLedDiagonal(2, 35, 255, 0, 34);
+            // for (int ledX = 3; ledX < 53; ledX++) SetLedDiagonal(ledX, 36, 255, 0, 34);
+            // SetLedDiagonal(53, 35, 255, 0, 34);
+            // SetLedDiagonal(54, 34, 255, 0, 34);
+            // SetLedDiagonal(55, 33, 255, 0, 34);
+            // SetLedDiagonal(56, 32, 255, 0, 34);
+            // SetLedDiagonal(57, 31, 255, 0, 34);
+            // SetLedDiagonal(58, 30, 255, 0, 34);
+            // SetLedDiagonal(59, 29, 255, 0, 34);
+            // SetLedDiagonal(60, 28, 255, 0, 34);
+            for (int ledX = 1; ledX <= 60; ledX++) {
+                for (int ledY = 1; ledY <= 36; ledY++) {
+                    // if (((ledX*60 + ledY) % 2) == 0) SetLedDiagonal(ledX, ledY, 255, 0, 34);
+                    // if (((ledX*60 + ledY) % 2) == 1) SetLedDiagonal(ledX, ledY, 255, 0, 34);
+                    // if (((ledX + ledY*60) % 2) == 0) SetLedDiagonal(ledX, ledY, 255, 0, 34);
+                    // if (((ledX + ledY*60) % 2) == 1) SetLedDiagonal(ledX, ledY, 255, 0, 34);
+                    // checkmates led pattern
+                    // if (((ledX + ledY) % 2) == 0) SetLedDiagonal(ledX, ledY, 255, 0, 34);
+                    if (((ledX + ledY) % 2) == 1) SetLedDiagonalGA401(ledX, ledY, 255);
+                }
+            }
+            for (int row = kek; row > 0; row--)
+            {
+                break;
+                SetLedDiagonal(kek - 3, row, 255);
+                continue;
+                // 4 <= row <= 63  kek ~= 01-60
+                (int first, int last) = GetRowData(row);
+                int set_value = first + (kek - row);
+                if (row < 6) set_value--;
+                if (row < 4) set_value--;
+                if (row < 2) set_value--;
+                if (kek == row && kek == 4) continue;
+                if (set_value > last) break;
+                SetLedLinear(set_value, 255);
+                // if (row == 1 || row == 55) for (int i = first + 1; i < last; i++) SetLedLinear(i, 255);
+            }
+            Present();
         }
     }
 }

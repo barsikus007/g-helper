@@ -39,6 +39,7 @@ namespace GHelper
             pictureMatrix = new PictureBox();
             labelMatrix = new Label();
             checkMatrix = new CheckBox();
+            textMatrix = new TextBox();
             panelBattery = new Panel();
             sliderBattery = new Slider();
             panelBatteryTitle = new Panel();
@@ -151,6 +152,7 @@ namespace GHelper
             panelMatrix.Controls.Add(tableLayoutMatrix);
             panelMatrix.Controls.Add(panelMatrixTitle);
             panelMatrix.Controls.Add(checkMatrix);
+            panelMatrix.Controls.Add(textMatrix);
             panelMatrix.Dock = DockStyle.Top;
             panelMatrix.Location = new Point(11, 747);
             panelMatrix.Margin = new Padding(0);
@@ -204,7 +206,7 @@ namespace GHelper
             comboMatrixRunning.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             comboMatrixRunning.FormattingEnabled = true;
             comboMatrixRunning.ItemHeight = 32;
-            comboMatrixRunning.Items.AddRange(new object[] { Properties.Strings.MatrixBanner, Properties.Strings.MatrixLogo, Properties.Strings.MatrixPicture, Properties.Strings.MatrixClock, Properties.Strings.MatrixAudio });
+            comboMatrixRunning.Items.AddRange(new object[] { Properties.Strings.MatrixBanner, Properties.Strings.MatrixLogo, Properties.Strings.MatrixPicture, Properties.Strings.MatrixClock, Properties.Strings.MatrixAudio, Properties.Strings.MatrixText });
             comboMatrixRunning.Location = new Point(266, 11);
             comboMatrixRunning.Margin = new Padding(4, 11, 4, 8);
             comboMatrixRunning.Name = "comboMatrixRunning";
@@ -273,6 +275,18 @@ namespace GHelper
             checkMatrix.TabIndex = 19;
             checkMatrix.Text = Properties.Strings.TurnOffOnBattery;
             checkMatrix.UseVisualStyleBackColor = true;
+            // 
+            // textMatrix
+            // 
+            textMatrix.AutoSize = true;
+            textMatrix.ForeColor = SystemColors.GrayText;
+            textMatrix.Location = new Point(528, 126);
+            // textMatrix.Location = new Point(528, 8);
+            textMatrix.Margin = new Padding(8, 4, 8, 4);
+            textMatrix.Name = "textMatrix";
+            textMatrix.Size = new Size(249, 36);
+            // textMatrix.TabIndex = 19;
+            // textMatrix.UseVisualStyleBackColor = true;
             // 
             // panelBattery
             // 
@@ -1503,6 +1517,7 @@ namespace GHelper
         private PictureBox pictureColor2;
         private PictureBox pictureColor;
         private CheckBox checkMatrix;
+        private TextBox textMatrix;
         private RButton button120Hz;
         private RButton buttonOptimized;
         private Label labelTipGPU;

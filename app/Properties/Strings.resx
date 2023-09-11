@@ -437,6 +437,9 @@ Do you still want to continue?</value>
   <data name="MatrixClock" xml:space="preserve">
     <value>Clock</value>
   </data>
+  <data name="MatrixText" xml:space="preserve">
+    <value>Text</value>
+  </data>
   <data name="MatrixDim" xml:space="preserve">
     <value>Dim</value>
   </data>
