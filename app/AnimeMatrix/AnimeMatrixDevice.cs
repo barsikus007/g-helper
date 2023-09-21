@@ -484,7 +484,7 @@ namespace Starlight.AnimeMatrix
 
         public void GenerateFrame(Image image, float zoom = 100, int panX = 0, int panY = 0, InterpolationMode quality = InterpolationMode.Default)
         {
-
+            bool matrixDiagonal = AppConfig.Get("matrix_diagonal", 0) == 0;
             int width = MaxColumns / 2 * 6;
             int height = MaxRows;
 
@@ -512,14 +512,13 @@ namespace Starlight.AnimeMatrix
                 for (int y = 0; y < bmp.Height; y++)
                 {
                     for (int x = 0; x < bmp.Width; x++)
-                        // if (x % 2 == y % 2)
-                        {
-                            var pixel = bmp.GetPixel(x, y);
-                            var color = (pixel.R + pixel.G + pixel.B) / 3;
-                            if (color < 10) color = 0;
-                            // SetLedPlanar(x / 2, y, (byte)color);
-                            SetLedDiagonalGA401(x, y, (byte)color);
-                        }
+                    {
+                        var pixel = bmp.GetPixel(x, y);
+                        var color = (pixel.R + pixel.G + pixel.B) / 3;
+                        if (color < 10) color = 0;
+                        if (!matrixDiagonal && x % 2 == y % 2) SetLedPlanar(x / 2, y, (byte)color);
+                        else if (matrixDiagonal) SetLedDiagonalGA401(x, y, (byte)color);
+                    }
                 }
             }
         }
@@ -701,6 +700,18 @@ namespace Starlight.AnimeMatrix
                 Present();
                 return;
             }
+            if (kek == -2)
+            {
+                for (int ledX = 1; ledX <= 60; ledX++) for (int ledY = 1; ledY <= 36; ledY++) SetLedDiagonalGA401(ledX, ledY, (byte)(((ledX-1)*60+ledY) % 256));
+                Present();
+                return;
+            }
+            if (kek == -3)
+            {
+                for (int ledX = 1; ledX <= 60; ledX++) for (int ledY = 1; ledY <= 36; ledY++) SetLedDiagonalGA401(ledX, ledY, (byte)(((ledY-1)*60+ledX) % 256));
+                Present();
+                return;
+            }
             // PresentBorder();
             kek += 3;
             // SetLedDiagonal(1, 33, 255, 0, 34);
@@ -717,13 +728,14 @@ namespace Starlight.AnimeMatrix
             // SetLedDiagonal(60, 28, 255, 0, 34);
             for (int ledX = 1; ledX <= 60; ledX++) {
                 for (int ledY = 1; ledY <= 36; ledY++) {
-                    // if (((ledX*60 + ledY) % 2) == 0) SetLedDiagonal(ledX, ledY, 255, 0, 34);
-                    // if (((ledX*60 + ledY) % 2) == 1) SetLedDiagonal(ledX, ledY, 255, 0, 34);
-                    // if (((ledX + ledY*60) % 2) == 0) SetLedDiagonal(ledX, ledY, 255, 0, 34);
-                    // if (((ledX + ledY*60) % 2) == 1) SetLedDiagonal(ledX, ledY, 255, 0, 34);
+                    // if (((ledX*60 + ledY) % 2) == 0) SetLedDiagonalGA401(ledX, ledY, 255);
+                    // if (((ledX*60 + ledY) % 2) == 1) SetLedDiagonalGA401(ledX, ledY, 255);
+                    // if (((ledX + ledY*60) % 2) == 0) SetLedDiagonalGA401(ledX, ledY, 255);
+                    // if (((ledX + ledY*60) % 2) == 1) SetLedDiagonalGA401(ledX, ledY, 255);
                     // checkmates led pattern
-                    // if (((ledX + ledY) % 2) == 0) SetLedDiagonal(ledX, ledY, 255, 0, 34);
-                    if (((ledX + ledY) % 2) == 1) SetLedDiagonalGA401(ledX, ledY, 255);
+                    // if (((ledX + ledY) % 2) == 0) SetLedDiagonalGA401(ledX, ledY, 255);
+                    // if (((ledX + ledY) % 2) == 1) SetLedDiagonalGA401(ledX, ledY, 255);
+                    SetLedDiagonalGA401(ledX, ledY, (byte)(((ledX-1)*60+ledY) % 256));
                 }
             }
             for (int row = kek; row > 0; row--)
